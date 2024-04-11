@@ -4,7 +4,7 @@
 
 using namespace std;
 
-class MySet {
+class Set {
 private:
     struct Node {
         int data;
@@ -17,20 +17,18 @@ private:
     Node* root;
 
 public:
-    MySet() : root(nullptr) {}
+    Set() : root(nullptr) {}
 
-    // Конструктор копирования
-    MySet(const MySet& other) {
+    Set(const Set& other) {
         root = clone(other.root);
     }
 
-    // Деструктор
-    ~MySet() {
+    ~Set() {
         clear(root);
     }
 
     // Оператор присваивания
-    MySet& operator=(const MySet& other) {
+    Set& operator=(const Set& other) {
         if (this != &other) {
             clear(root);
             root = clone(other.root);
@@ -173,62 +171,59 @@ private:
     }
 };
 
-double fillTime(int n) {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(1, 1000000);
+size_t lcg() {
+    static size_t x = 0;
+    x = (1021 * x + 24631) % 116640;
+    return x;
+}
 
-    MySet set;
+double fillTime(int n) {
+    Set set;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < n; ++i) {
-        set.insert(distribution(generator));
+        set.insert(lcg());
     }
 
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> time = end - start;
-    return time.count() * 1000; // Время в миллисекундах
+    return time.count() * 1000;
 }
 
 double searchTime(int n) {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(1, 1000000);
-
-    MySet set;
+    Set set;
 
     for (int i = 0; i < n; ++i) {
-        set.insert(distribution(generator));
+        set.insert(lcg());
     }
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < 1000; ++i) {
-        set.contains(distribution(generator));
+        set.contains(lcg());
     }
 
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> time = end - start;
-    return time.count() * 1000; // Время в миллисекундах
+    return time.count() * 1000;
 }
 
 double addRemoveTime(int n) {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(1, 1000000);
-
-    MySet set;
+    Set set;
 
     for (int i = 0; i < n; ++i) {
-        set.insert(distribution(generator));
+        set.insert(lcg());
     }
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < 1000; ++i) {
-        int key = distribution(generator);
+        size_t key = lcg();
 
-        if (distribution(generator) % 2 == 0) {
+        if (lcg() % 2 == 0) {
             set.insert(key);
         }
         else {
@@ -239,7 +234,7 @@ double addRemoveTime(int n) {
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> time = end - start;
-    return time.count() * 1000; // Время в миллисекундах
+    return time.count() * 1000;
 }
 
 int main() {
