@@ -1,11 +1,13 @@
 #include <iostream>
 #include <random>
 #include <chrono>
+#include <vector>
 
 using namespace std;
 
 class Set {
-private:
+public:
+
     struct Node {
         int data;
         Node* left;
@@ -16,7 +18,6 @@ private:
 
     Node* root;
 
-public:
     Set() : root(nullptr) {}
 
     Set(const Set& other) {
@@ -27,7 +28,6 @@ public:
         clear(root);
     }
 
-    // Оператор присваивания
     Set& operator=(const Set& other) {
         if (this != &other) {
             clear(root);
@@ -36,25 +36,22 @@ public:
         return *this;
     }
 
-    // Печать содержимого
     void print() {
         printInOrder(root);
     }
 
-    // Вставка элемента
     bool insert(int key) {
         return insertValue(root, key);
     }
 
-    // Проверка наличия элемента
     bool contains(int key) {
         return containsValue(root, key);
     }
 
-    // Удаление элемента
     bool erase(int key) {
         return eraseValue(root, key);
     }
+
 
 private:
     // Рекурсивная функция для клонирования дерева
@@ -180,15 +177,15 @@ size_t lcg() {
 double fillTime(int n) {
     Set set;
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < n; ++i) {
         set.insert(lcg());
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double> time = end - start;
+    chrono::duration<double> time = end - start;
     return time.count() * 1000;
 }
 
@@ -199,15 +196,15 @@ double searchTime(int n) {
         set.insert(lcg());
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < 1000; ++i) {
         set.contains(lcg());
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double> time = end - start;
+    chrono::duration<double> time = end - start;
     return time.count() * 1000;
 }
 
@@ -218,7 +215,7 @@ double addRemoveTime(int n) {
         set.insert(lcg());
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < 1000; ++i) {
         size_t key = lcg();
@@ -231,35 +228,188 @@ double addRemoveTime(int n) {
         }
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double> time = end - start;
+    chrono::duration<double> time = end - start;
     return time.count() * 1000;
+}
+
+double fillTimeVector(int n) {
+    vector<int> vec;
+
+    auto start = chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < n; ++i) {
+        vec.push_back(lcg());
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time = end - start;
+    return time.count() * 1000;
+}
+
+double searchTimeVector(int n) {
+    vector<int> vec;
+
+    for (int i = 0; i < n; ++i) {
+        vec.push_back(lcg());
+    }
+
+    auto start = chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < 1000; ++i) {
+        find(vec.begin(), vec.end(), lcg());
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time = end - start;
+    return time.count() * 1000;
+}
+
+double addRemoveTimeVector(int n) {
+    vector<int> vec;
+
+    for (int i = 0; i < n; ++i) {
+        vec.push_back(lcg());
+    }
+
+    auto start = chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < 1000; ++i) {
+        int key = lcg();
+
+        if (lcg() % 2 == 0) {
+            vec.push_back(key);
+        }
+        else {
+            vec.erase(remove(vec.begin(), vec.end(), key), vec.end());
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> time = end - start;
+    return time.count() * 1000;
+}
+
+void unionSetsHelper(Set& result, Set::Node* node) {
+    if (node != nullptr) {
+        // Вставляем данные узла в множество result
+        result.insert(node->data);
+
+        // Рекурсивно обрабатываем левое и правое поддерево
+        unionSetsHelper(result, node->left);
+        unionSetsHelper(result, node->right);
+    }
+}
+
+Set unionOfSets(const Set& set1, const Set& set2) {
+    Set result(set1); // Создаем копию первого множества
+
+    // Функция-помощник для выполнения объединения
+    unionSetsHelper(result, set2.root);
+
+    return result;
+}
+
+void addUniqueElementsToResult(Set::Node* node, Set& result) {
+    if (node != nullptr) {
+        Set result2 = result;
+        if (result.contains(node->data)) {
+            result.erase(node->data);
+        }
+
+        if (!result2.contains(node->data)) {
+            result.insert(node->data);
+        }
+
+        // Рекурсивно обходим левое и правое поддеревья
+        addUniqueElementsToResult(node->left, result);
+        addUniqueElementsToResult(node->right, result);
+    }
+}
+Set symmetricDifference(const Set& set1, const Set& set2) {
+    Set result(set1);
+
+    addUniqueElementsToResult(set2.root, result);
+
+    return result;
 }
 
 int main() {
     // Тестирование времени заполнения
-    std::cout << "Fill time:" << std::endl;
-    std::cout << "------------------" << std::endl;
-    std::cout << "1000 elements: " << fillTime(1000) << " milliseconds" << std::endl;
-    std::cout << "10000 elements: " << fillTime(10000) << " milliseconds" << std::endl;
-    std::cout << "100000 elements: " << fillTime(100000) << " milliseconds" << std::endl;
-    std::cout << std::endl;
+    cout << "Fill time:" << endl;
+    cout << "------------------" << endl;
+    cout << "1000 elements: " << fillTime(1000) << " milliseconds" << endl;
+    cout << "10000 elements: " << fillTime(10000) << " milliseconds" << endl;
+    cout << "100000 elements: " << fillTime(100000) << " milliseconds\n" << endl;
+    cout << endl;
 
     // Тестирование времени поиска
-    std::cout << "search time:" << std::endl;
-    std::cout << "------------------" << std::endl;
-    std::cout << "1000 elements: " << searchTime(1000) << " milliseconds" << std::endl;
-    std::cout << "10000 elements: " << searchTime(10000) << " milliseconds" << std::endl;
-    std::cout << "100000 elements: " << searchTime(100000) << " milliseconds" << std::endl;
-    std::cout << std::endl;
+    cout << "search time:" << endl;
+    cout << "------------------" << endl;
+    cout << "1000 elements: " << searchTime(1000) << " milliseconds" << endl;
+    cout << "10000 elements: " << searchTime(10000) << " milliseconds" << endl;
+    cout << "100000 elements: " << searchTime(100000) << " milliseconds\n" << endl;
+    cout << endl;
 
     // Тестирование времени добавления и удаления
-    std::cout << "Add and remove times:" << std::endl;
-    std::cout << "------------------" << std::endl;
-    std::cout << "1000 elements: " << addRemoveTime(1000) << " milliseconds" << std::endl;
-    std::cout << "10000 elements: " << addRemoveTime(10000) << " milliseconds" << std::endl;
-    std::cout << "100000 elements: " << addRemoveTime(100000) << " milliseconds" << std::endl;
+    cout << "Add and remove times:" << endl;
+    cout << "------------------" << endl;
+    cout << "1000 elements: " << addRemoveTime(1000) << " milliseconds" << endl;
+    cout << "10000 elements: " << addRemoveTime(10000) << " milliseconds" << endl;
+    cout << "100000 elements: " << addRemoveTime(100000) << " milliseconds\n" << endl;
+
+    // Тестирование времени заполнения вектора
+    cout << "Fill time for vector:" << endl;
+    cout << "------------------" << endl;
+    cout << "1000 elements: " << fillTimeVector(1000) << " milliseconds" << endl;
+    cout << "10000 elements: " << fillTimeVector(10000) << " milliseconds" << endl;
+    cout << "100000 elements: " << fillTimeVector(100000) << " milliseconds\n" << endl;
+    cout << endl;
+
+    // Тестирование времени поиска вектора
+    cout << "Search time for vector:" << endl;
+    cout << "------------------" << endl;
+    cout << "1000 elements: " << searchTimeVector(1000) << " milliseconds" << endl;
+    cout << "10000 elements: " << searchTimeVector(10000) << " milliseconds" << endl;
+    cout << "100000 elements: " << searchTimeVector(100000) << " milliseconds\n" << endl;
+    cout << endl;
+
+    // Тестирование времени добавления и удаления вектора
+    cout << "Add and remove times for vector:" << endl;
+    cout << "------------------" << endl;
+    cout << "1000 elements: " << addRemoveTimeVector(1000) << " milliseconds" << endl;
+    cout << "10000 elements: " << addRemoveTimeVector(10000) << " milliseconds" << endl;
+    cout << "100000 elements: " << addRemoveTimeVector(100000) << " milliseconds\n" << endl;
+
+    Set set1;
+    set1.insert(1);
+    set1.insert(2);
+    set1.insert(3);
+    set1.insert(4);
+    set1.print();
+    cout << endl;
+
+    Set set2;
+    set2.insert(3);
+    set2.insert(4);
+    set2.insert(5);
+    set2.insert(6);
+    set2.print();
+    cout << endl;
+
+    Set unionSet = unionOfSets(set1, set2);
+    cout << "Union of sets: ";
+    unionSet.print();
+    cout << endl;
+
+    Set symmetricDifferenceSet = symmetricDifference(set1, set2);
+    cout << "Symmetric difference of sets: ";
+    symmetricDifferenceSet.print();
+    cout << endl;
 
     return 0;
 }
